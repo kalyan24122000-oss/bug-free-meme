@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Daily Quotes Admin Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #333; color: white; }
+        input { padding: 8px; margin: 4px 0; width: 90%; }
+        button { padding: 8px 16px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <h2>Daily Quotes Admin Panel</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Wallet Balance (₹)</th>
+                <th>Quotes Used Today</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="user-table-body">
+            <!-- populated by JS -->
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchUsers() {
+            const res = await fetch('/api/admin/users');
+            const users = await res.json();
+            const tbody = document.getElementById('user-table-body');
+            tbody.innerHTML = '';
+            
+            users.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${user.id}</td>
+                    <td><input type="text" id="username-${user.id}" value="${user.username}" /></td>
+                    <td><input type="text" id="password-${user.id}" value="${user.password}" /></td>
+                    <td><input type="number" id="wallet-${user.id}" value="${user.wallet}" step="0.1" /></td>
+                    <td>${user.quotes_today}</td>
+                    <td>
+                        <button onclick="updateUser(${user.id})">Save</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function updateUser(id) {
+            const username = document.getElementById(`username-${id}`).value;
+            const password = document.getElementById(`password-${id}`).value;
+            const wallet = document.getElementById(`wallet-${id}`).value;
+            
+            const res = await fetch(`/api/admin/users/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, wallet: parseFloat(wallet) })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('User updated successfully!');
+            } else {
+                alert('Error updating user');
+            }
+        }
+
+        // initial load
+        fetchUsers();
+    </script>
+</body>
+</html>
